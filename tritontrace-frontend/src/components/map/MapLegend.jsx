@@ -35,6 +35,16 @@ export const MapLegend = () => {
           </div>
           <span className="text-xs font-medium text-slate-300">Correlation Point</span>
         </div>
+
+        <div className="flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-dashed border-amber-500 bg-amber-500/20" />
+          <span className="text-xs font-medium text-slate-300">Watch Zone (50km)</span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-rose-500 bg-rose-500/20" />
+          <span className="text-xs font-medium text-slate-300">Critical Strike Zone (15km)</span>
+        </div>
       </div>
     </div>
   );

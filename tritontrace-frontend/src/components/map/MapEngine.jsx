@@ -31,6 +31,7 @@ const INITIAL_LAYERS = [
   { id: 'sar_slick', label: 'SAR Slick Polygons', active: true, color: 'bg-cyan-400' },
   { id: 'hindcast', label: 'Hindcast Particles', active: true, color: 'bg-rose-500' },
   { id: 'ais_tracks', label: 'AIS Vessel Tracks', active: false, color: 'bg-amber-400' },
+  { id: 'geofences', label: 'Regional Alert Geofences', active: true, color: 'bg-emerald-500' },
 ];
 
 export const MapEngine = () => {

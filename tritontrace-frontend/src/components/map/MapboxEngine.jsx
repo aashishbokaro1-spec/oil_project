@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, useRef } from 'react';
 import Map, { Source, Layer } from 'react-map-gl/mapbox';
 import { useIncident } from '../../context/IncidentContext';
 import { mockHistoricalIncidents, mockForwardTrack } from '../../utils/mockData';
+import geofencesData from '../../utils/regional_alert_geofences.json';
 import * as turf from '@turf/turf';
 
 export const MapboxEngine = ({ 
@@ -37,6 +38,7 @@ export const MapboxEngine = ({
   const isSarVisible = layers.find(l => l.id === 'sar_slick')?.active;
   const isHindcastVisible = layers.find(l => l.id === 'hindcast')?.active;
   const isAisVisible = layers.find(l => l.id === 'ais_tracks')?.active;
+  const isGeofencesVisible = layers.find(l => l.id === 'geofences')?.active;
 
   const mockData = useMemo(() => ({
     sar: {
@@ -181,6 +183,42 @@ export const MapboxEngine = ({
             layout={{ visibility: isSarVisible ? 'visible' : 'none' }}
           />
         </Source>
+
+        {isGeofencesVisible && (
+          <Source id="geofences-source" type="geojson" data={geofencesData}>
+            <Layer 
+              id="geofences-layer-fill" 
+              type="fill" 
+              paint={{ 
+                'fill-color': ['get', 'color'], 
+                'fill-opacity': 0.22 
+              }}
+            />
+            {/* Watch Zones (dashed line) */}
+            <Layer 
+              id="geofences-layer-line-watch" 
+              type="line" 
+              filter={['==', ['get', 'zone_level'], 'Watch Zone']}
+              paint={{ 
+                'line-color': ['get', 'color'], 
+                'line-width': 1.5,
+                'line-dasharray': [4, 4],
+                'line-opacity': 0.85
+              }}
+            />
+            {/* Critical Strike Zones (solid line) */}
+            <Layer 
+              id="geofences-layer-line-critical" 
+              type="line" 
+              filter={['==', ['get', 'zone_level'], 'Critical Strike Zone']}
+              paint={{ 
+                'line-color': ['get', 'color'], 
+                'line-width': 2,
+                'line-opacity': 0.85
+              }}
+            />
+          </Source>
+        )}
         {activeAnalysisMode === 'attribution' && dynamicHindcastData && (
           <Source id="hindcast-source" type="geojson" data={dynamicHindcastData}>
             <Layer 

@@ -1,8 +1,9 @@
 import React, { useMemo, useEffect } from 'react';
-import { MapContainer, TileLayer, ZoomControl, Polygon, CircleMarker, Polyline, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, ZoomControl, Polygon, CircleMarker, Polyline, useMapEvents, useMap, GeoJSON } from 'react-leaflet';
 import * as turf from '@turf/turf';
 import { useIncident } from '../../context/IncidentContext';
 import { mockHistoricalIncidents, mockForwardTrack } from '../../utils/mockData';
+import geofencesData from '../../utils/regional_alert_geofences.json';
 
 const MapInteractionHandler = () => {
   const { 
@@ -79,6 +80,7 @@ export const LeafletEngine = ({
   const isSarVisible = layers.find(l => l.id === 'sar_slick')?.active;
   const isHindcastVisible = layers.find(l => l.id === 'hindcast')?.active;
   const isAisVisible = layers.find(l => l.id === 'ais_tracks')?.active;
+  const isGeofencesVisible = layers.find(l => l.id === 'geofences')?.active;
 
   // Leaflet uses [Lat, Lon] format
   const sarPositions = [[31.75, 28.1], [31.75, 28.3], [31.85, 28.25], [31.8, 28.1], [31.75, 28.1]];
@@ -154,6 +156,36 @@ export const LeafletEngine = ({
         
         {isSarVisible && (
           <Polygon positions={sarPositions} pathOptions={{ color: '#0891b2', fillColor: '#22d3ee', fillOpacity: 0.4 }} />
+        )}
+
+        {isGeofencesVisible && (
+          <GeoJSON 
+            data={geofencesData} 
+            key={`geofences-${isGeofencesVisible}`} 
+            style={(feature) => {
+              const isCritical = feature.properties.zone_level === 'Critical Strike Zone';
+              return {
+                color: isCritical ? '#EF4444' : '#F59E0B',
+                fillColor: isCritical ? '#EF4444' : '#F59E0B',
+                weight: isCritical ? 2 : 1.5,
+                dashArray: isCritical ? null : '4, 4',
+                fillOpacity: 0.22,
+                opacity: 0.85
+              };
+            }}
+            onEachFeature={(feature, layer) => {
+              const p = feature.properties;
+              const badgeColor = p.zone_level === 'Critical Strike Zone' ? 'text-rose-400 border-rose-500/40 bg-rose-950/40' : 'text-amber-400 border-amber-500/40 bg-amber-950/40';
+              layer.bindTooltip(`
+                <div class="bg-slate-900 border border-slate-700 text-slate-100 p-2 rounded shadow-xl font-mono text-xs">
+                  <div class="font-bold text-sm text-slate-100 mb-1">${p.name}</div>
+                  <div class="inline-block px-1.5 py-0.5 rounded border text-[10px] mb-1.5 ${badgeColor}">${p.zone_level}</div>
+                  <div class="text-slate-400">Type: <span class="text-slate-200">${p.type} (${p.radius_km} km)</span></div>
+                  <div class="text-slate-400 mt-1">Penalty Factor: <span class="text-amber-300 font-bold">${p.liability_multiplier}x</span></div>
+                </div>
+              `, { sticky: true, className: 'tactical-leaflet-tooltip' });
+            }}
+          />
         )}
         
         {activeAnalysisMode === 'attribution' && dynamicHindcastPositions.map((pos, i) => (
